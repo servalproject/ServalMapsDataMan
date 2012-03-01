@@ -21,6 +21,7 @@ package org.servalproject.maps.dataman;
 
 import java.io.File;
 import java.io.IOException;
+import java.text.ParseException;
 import java.util.HashMap;
 import java.util.Set;
 
@@ -33,6 +34,7 @@ import org.apache.commons.cli.Options;
 import org.apache.commons.cli.PosixParser;
 import org.servalproject.maps.dataman.tasks.LocationsToKml;
 import org.servalproject.maps.dataman.tasks.TaskException;
+import org.servalproject.maps.dataman.types.KmlStyle;
 
 /**
  * main driving class for the command line interface entry 
@@ -122,6 +124,22 @@ public class DataManCli {
 			printCliHelp("Error: the task type was not recognised.\nKnown task types are:" + getTaskList(taskTypes));
 		}
 		
+		// style information
+		String style = cmd.getOptionValue("style");
+		KmlStyle kmlStyle = null;
+		
+		// expand on the list of styles
+		if(style != null) {
+			try {
+				kmlStyle = new KmlStyle(style);
+			} catch (ParseException e) {
+				System.err.println("unable to parse the style definition\n" + e.toString());
+				System.exit(-1);
+			}
+		}
+		
+		
+		// verbose output
 		boolean verbose = cmd.hasOption("verbose");
 		
 		// output info if required
@@ -143,7 +161,8 @@ public class DataManCli {
 		// undertake the specific task
 		if(taskType.equals("binloctokml") == true) {
 			
-			LocationsToKml task = new LocationsToKml(inputFile, outputFile, LocationsToKml.BINARY_FILE_TYPE, verbose);
+			LocationsToKml task = new LocationsToKml(inputFile, outputFile, LocationsToKml.BINARY_FILE_TYPE, verbose, kmlStyle);
+			
 			try {
 				task.undertakeTask();
 			} catch (TaskException e) {
@@ -191,6 +210,13 @@ public class DataManCli {
 		OptionBuilder.withDescription("manipulation task to undertake");
 		OptionBuilder.isRequired(true);
 		options.addOption(OptionBuilder.create("task"));
+		
+		// style information
+		OptionBuilder.withArgName("text");
+		OptionBuilder.hasArg(true);
+		OptionBuilder.withDescription("style definition information");
+		OptionBuilder.isRequired(false);
+		options.addOption(OptionBuilder.create("style"));
 		
 		// verbose output or not
 		options.addOption(new Option("verbose", "use verbose output"));

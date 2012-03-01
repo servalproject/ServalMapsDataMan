@@ -31,6 +31,7 @@ import org.servalproject.maps.dataman.Utils;
 import org.servalproject.maps.dataman.builders.BuildException;
 import org.servalproject.maps.dataman.builders.KmlBuilder;
 import org.servalproject.maps.dataman.types.GpsTraceElement;
+import org.servalproject.maps.dataman.types.KmlStyle;
 import org.servalproject.maps.protobuf.BinaryFileContract;
 import org.servalproject.maps.protobuf.LocationMessage;
 import org.servalproject.maps.protobuf.LocationMessage.Message.Builder;
@@ -48,10 +49,11 @@ public class LocationsToKml {
 	/*
 	 * private class level variables
 	 */
-	private boolean verbose = false;
-	private File    inputFile;
-	private File    outputFile;
-	private int     fileType;
+	private boolean  verbose = false;
+	private File     inputFile;
+	private File     outputFile;
+	private int      fileType;
+	private KmlStyle style;
 	
 	/**
 	 * convert the locations stored in a file into a KML file
@@ -61,7 +63,7 @@ public class LocationsToKml {
 	 * @param fileType the type of input file
 	 * @param verbose indicates if verbose output is required
 	 */
-	public LocationsToKml(File inputFile, File outputFile, int fileType, boolean verbose) {
+	public LocationsToKml(File inputFile, File outputFile, int fileType, boolean verbose, KmlStyle style) {
 		
 		// check the parameters
 		if(inputFile == null) {
@@ -103,6 +105,7 @@ public class LocationsToKml {
 		this.inputFile = inputFile;
 		this.outputFile = outputFile;
 		this.fileType = fileType;
+		this.style = style;
 	}
 	
 	/**
@@ -164,6 +167,9 @@ public class LocationsToKml {
 			
 			// start a new KML file
 			KmlBuilder builder = new KmlBuilder();
+			
+			// add any style info
+			builder.setStyle(style);
 			
 			// add the GPS trace
 			builder.addTrace(trace);

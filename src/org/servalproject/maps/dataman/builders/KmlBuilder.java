@@ -31,6 +31,7 @@ import javax.xml.transform.dom.DOMSource;
 import javax.xml.transform.stream.StreamResult;
 
 import org.servalproject.maps.dataman.types.GpsTraceElement;
+import org.servalproject.maps.dataman.types.KmlStyle;
 import org.w3c.dom.DOMImplementation;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
@@ -49,6 +50,13 @@ public class KmlBuilder {
 	private Document               xmlDoc;
 	private Element                rootElement;
 	private Element                rootDocument;
+	
+	private boolean hasStyle = false;
+	
+	/*
+	 * private class level constants
+	 */
+	private final String STYLE_URL = "gpsTraceStyle";
 
 	/**
 	 * instantiates a new KML builder
@@ -110,6 +118,41 @@ public class KmlBuilder {
 	}
 	
 	/**
+	 * set the KML style for the line that represents the GPS trace
+	 * 
+	 * @param style an object representing the style parameters
+	 */
+	public boolean setStyle(KmlStyle style) {
+		
+		if(style == null) {
+			throw new IllegalArgumentException("the style parameter is required");
+		}
+		
+		if(hasStyle == false) {
+			// add the style information
+			Element styleElem = xmlDoc.createElement("Style");
+			styleElem.setAttribute("id", STYLE_URL);
+			
+			Element lineStyle = xmlDoc.createElement("LineStyle");
+			styleElem.appendChild(lineStyle);
+			
+			Element elem = xmlDoc.createElement("color");
+			elem.setTextContent(style.getColour());
+			lineStyle.appendChild(elem);
+			
+			elem = xmlDoc.createElement("width");
+			elem.setTextContent(Integer.toString(style.getWidth()));
+			lineStyle.appendChild(elem);
+			
+			rootDocument.appendChild(styleElem);
+			
+			hasStyle = true;
+		} 
+		
+		return false;
+	}
+	
+	/**
 	 * 
 	 * @param trace a list of GpsTraceElements
 	 * @throws BuildException if a error occurs while processing the list of traces
@@ -128,6 +171,12 @@ public class KmlBuilder {
 		// add the start of the PlaceMark element
 		Element elem = xmlDoc.createElement("Placemark");
 		rootDocument.appendChild(elem);
+		
+		if(hasStyle == true) {
+			Element styleUrl = xmlDoc.createElement("styleUrl");
+			styleUrl.setTextContent(STYLE_URL);
+			elem.appendChild(styleUrl);
+		}
 		
 		// add the LineString element
 		Element lineString = xmlDoc.createElement("LineString");
@@ -166,23 +215,23 @@ public class KmlBuilder {
 	 */
 	public void outputToFile(PrintWriter printWriter) throws BuildException {
 
-			try {
-	            // create a transformer 
-	            TransformerFactory transFactory = TransformerFactory.newInstance();
-	            Transformer        transformer  = transFactory.newTransformer();
-	            
-	            // set some options on the transformer
-	            transformer.setOutputProperty(OutputKeys.ENCODING, "utf-8");
-	            transformer.setOutputProperty(OutputKeys.OMIT_XML_DECLARATION, "no");
-	            transformer.setOutputProperty(OutputKeys.INDENT, "yes");
-	            transformer.setOutputProperty("{http://xml.apache.org/xslt}indent-amount", "2");
-	            
-	            // get a transformer and supporting classes
-	            StreamResult result = new StreamResult(printWriter);
-	            DOMSource    source = new DOMSource(xmlDoc);
-	            
-	            // transform the internal objects into XML and print it
-	            transformer.transform(source, result);
+		try {
+            // create a transformer 
+            TransformerFactory transFactory = TransformerFactory.newInstance();
+            Transformer        transformer  = transFactory.newTransformer();
+            
+            // set some options on the transformer
+            transformer.setOutputProperty(OutputKeys.ENCODING, "utf-8");
+            transformer.setOutputProperty(OutputKeys.OMIT_XML_DECLARATION, "no");
+            transformer.setOutputProperty(OutputKeys.INDENT, "yes");
+            transformer.setOutputProperty("{http://xml.apache.org/xslt}indent-amount", "2");
+            
+            // get a transformer and supporting classes
+            StreamResult result = new StreamResult(printWriter);
+            DOMSource    source = new DOMSource(xmlDoc);
+            
+            // transform the internal objects into XML and print it
+            transformer.transform(source, result);
 	
 	    } catch (javax.xml.transform.TransformerException e) {
 	            throw new BuildException("unable to create the XML and output it to the file", e);
