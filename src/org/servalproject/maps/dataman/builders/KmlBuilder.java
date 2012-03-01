@@ -124,11 +124,7 @@ public class KmlBuilder {
 	 */
 	public boolean setStyle(KmlStyle style) {
 		
-		if(style == null) {
-			throw new IllegalArgumentException("the style parameter is required");
-		}
-		
-		if(hasStyle == false) {
+		if(style != null && hasStyle == false) {
 			// add the style information
 			Element styleElem = xmlDoc.createElement("Style");
 			styleElem.setAttribute("id", STYLE_URL);
