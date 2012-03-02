@@ -30,6 +30,7 @@ import javax.xml.transform.TransformerFactory;
 import javax.xml.transform.dom.DOMSource;
 import javax.xml.transform.stream.StreamResult;
 
+import org.servalproject.maps.dataman.Utils;
 import org.servalproject.maps.dataman.types.GpsTraceElement;
 import org.servalproject.maps.dataman.types.KmlStyle;
 import org.w3c.dom.DOMImplementation;
@@ -149,6 +150,7 @@ public class KmlBuilder {
 	}
 	
 	/**
+	 * add a basic GPS trace
 	 * 
 	 * @param trace a list of GpsTraceElements
 	 * @throws BuildException if a error occurs while processing the list of traces
@@ -202,6 +204,90 @@ public class KmlBuilder {
 		
 		elem.setTextContent(coordinates.toString());
 		lineString.appendChild(elem);
+	}
+	
+	/**
+	 * add a basic GPS trace
+	 * 
+	 * @param trace a list of GpsTraceElements
+	 * @throws BuildException if a error occurs while processing the list of traces
+	 */
+	public void addTraceWithTime(ArrayList<GpsTraceElement> trace) throws BuildException {
+		
+		// validate the parameters
+		if(trace == null) {
+			throw new IllegalArgumentException("the trace parameter is required");
+		}
+		
+		if(trace.size() == 0) {
+			throw new IllegalArgumentException("the trace must contain at least one element");
+		}
+		
+		GpsTraceElement previousTraceElement = null;
+		String coordinates;
+		Element elem;
+		
+		for(GpsTraceElement currentTraceElement : trace) {
+			if(previousTraceElement == null) {
+				previousTraceElement = currentTraceElement;
+				continue;
+			}
+			
+			// add the start of the PlaceMark element
+			Element placemark = xmlDoc.createElement("Placemark");
+			rootDocument.appendChild(placemark);
+			
+			if(hasStyle == true) {
+				Element styleUrl = xmlDoc.createElement("styleUrl");
+				styleUrl.setTextContent(STYLE_URL);
+				placemark.appendChild(styleUrl);
+			}
+			
+			// add the LineString element
+			Element lineString = xmlDoc.createElement("LineString");
+			placemark.appendChild(lineString);
+			
+			// add the tessellate element
+			elem = xmlDoc.createElement("tessellate");
+			elem.setTextContent("1");
+			lineString.appendChild(elem);
+			
+			// create the altitude mode
+			// used in conjunction with the tessellate element above to ensure the 
+			// line string is stuck to the ground
+			elem = xmlDoc.createElement("altitudeMode");
+			elem.setTextContent("clampToGround");
+			lineString.appendChild(elem);
+			
+			// create the coordinates element
+			elem = xmlDoc.createElement("coordinates");
+			
+			coordinates = new String();
+			
+			coordinates = Double.toString(previousTraceElement.getLongitude()) + "," 
+						+ Double.toString(previousTraceElement.getLatitude()) + " "
+						+ Double.toString(currentTraceElement.getLongitude()) + "," 
+						+ Double.toString(currentTraceElement.getLatitude()) + " ";
+			
+			elem.setTextContent(coordinates);
+			lineString.appendChild(elem);
+			
+			// create the timespan element
+			Element timespan = xmlDoc.createElement("TimeSpan");
+			
+			elem = xmlDoc.createElement("begin");
+			elem.setTextContent(Utils.buildTime(previousTraceElement.getTimestamp(), previousTraceElement.getTimezone()));
+			timespan.appendChild(elem);
+			
+			elem = xmlDoc.createElement("end");
+			elem.setTextContent(Utils.buildTime(currentTraceElement.getTimestamp(), currentTraceElement.getTimezone()));
+			timespan.appendChild(elem);
+			
+			placemark.appendChild(timespan);
+			
+			// store reference to the current place mark for later
+			previousTraceElement = currentTraceElement;
+		}
 	}
 	
 	/**

@@ -23,7 +23,6 @@ import java.io.File;
 import java.io.IOException;
 import java.text.ParseException;
 import java.util.HashMap;
-import java.util.Set;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
@@ -35,6 +34,7 @@ import org.apache.commons.cli.PosixParser;
 import org.servalproject.maps.dataman.tasks.LocationsToKml;
 import org.servalproject.maps.dataman.tasks.TaskException;
 import org.servalproject.maps.dataman.types.KmlStyle;
+import org.servalproject.maps.dataman.types.TaskTypes;
 
 /**
  * main driving class for the command line interface entry 
@@ -118,10 +118,10 @@ public class DataManCli {
 			printCliHelp("Error: the task type is required");
 		}
 		
-		HashMap<String, String> taskTypes = getTaskTypes();
+		HashMap<String, String> taskTypes = TaskTypes.getTaskTypes();
 		
 		if(taskTypes.containsKey(taskType) == false) {
-			printCliHelp("Error: the task type was not recognised.\nKnown task types are:" + getTaskList(taskTypes));
+			printCliHelp("Error: the task type was not recognised.\nKnown task types are:" + TaskTypes.getTaskList());
 		}
 		
 		// style information
@@ -159,18 +159,16 @@ public class DataManCli {
 		}
 		
 		// undertake the specific task
-		if(taskType.equals("binloctokml") == true) {
+		if(taskType.startsWith("binloctokml") == true) {
 			
 			LocationsToKml task = new LocationsToKml(inputFile, outputFile, LocationsToKml.BINARY_FILE_TYPE, verbose, kmlStyle);
 			
 			try {
-				task.undertakeTask();
+				task.undertakeTask(taskType);
 			} catch (TaskException e) {
 				System.err.println("Error: Task execution failed\n" + e.toString());
 			}
-			
 		}
-
 	}
 	
 	/*
@@ -222,34 +220,5 @@ public class DataManCli {
 		options.addOption(new Option("verbose", "use verbose output"));
 		
 		return options;
-	}
-	
-	/*
-	 * build the list of task types
-	 */
-	private static HashMap<String, String> getTaskTypes() {
-		
-		HashMap<String, String> taskTypes = new HashMap<String, String>();
-		
-		taskTypes.put("binloctokml", "Convert a binary location file to a KML file");
-		
-		return taskTypes;	
-	}
-	
-	/*
-	 * build a human readable list of task types
-	 */
-	private static String getTaskList(HashMap<String, String> taskTypes) {
-		
-		StringBuilder list = new StringBuilder("\n");
-		
-		Set<String> keys = taskTypes.keySet();
-		
-		for(String key : keys) {
-			
-			list.append("  - " + key + ": " + taskTypes.get(key) + "\n");
-		}
-		
-		return list.toString();
 	}
 }

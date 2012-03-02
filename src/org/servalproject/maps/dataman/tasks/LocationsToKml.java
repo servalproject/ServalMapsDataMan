@@ -111,25 +111,36 @@ public class LocationsToKml {
 	/**
 	 * undertake the task
 	 */
-	public void undertakeTask() throws TaskException {
+	public void undertakeTask(String taskType) throws TaskException {
 		
-		switch(fileType) {
-		case BINARY_FILE_TYPE:
-			processBinaryFile(inputFile, outputFile);
-			break;
-		default:
-			return;
+		// check on the parameters
+		if(Utils.isEmpty(taskType) == true) {
+			throw new IllegalArgumentException("the taskType parameter is required");
+		}
+		
+		if(taskType.equals("binloctokml") == true) {
+			switch(fileType) {
+			case BINARY_FILE_TYPE:
+				processBinaryFileBasicOutput(inputFile, outputFile);
+				break;
+			default:
+				return;
+			}
+		} else if(taskType.equals("binloctokml2") == true) {
+			switch(fileType) {
+			case BINARY_FILE_TYPE:
+				processBinaryFileTimeOutput(inputFile, outputFile);
+				break;
+			default:
+				return;
+			}
+		} else {
+			throw new TaskException("unrecognised task type parameter");
 		}
 	}
 	
-	/*
-	 * process a binary file
-	 */
-	private void processBinaryFile(File inputFile, File outputFile) throws TaskException{
-		
-		if(verbose) {
-			System.out.println("processing a binary file");
-		}
+	// private method to retrieve the GPS trace from the binary file
+	private ArrayList<GpsTraceElement> retrieveTraceFromBinaryFile(File inputFile) throws TaskException {
 		
 		// declare helper variables
 		FileInputStream inputStream = null;
@@ -152,7 +163,8 @@ public class LocationsToKml {
 				trace.add(new GpsTraceElement(
 						messageBuilder.getLatitude(),
 						messageBuilder.getLongitude(),
-						messageBuilder.getTimestamp()
+						messageBuilder.getTimestamp(),
+						messageBuilder.getTimeZone()
 						));
 			}
 			
@@ -161,6 +173,20 @@ public class LocationsToKml {
 		} catch (IOException e) {
 			throw new TaskException("unable to read messages from the binary file", e);
 		}
+		
+		return trace;
+	}
+	 
+	/*
+	 * process a binary file
+	 */
+	private void processBinaryFileBasicOutput(File inputFile, File outputFile) throws TaskException {
+		
+		if(verbose) {
+			System.out.println("processing a binary file");
+		}
+		
+		ArrayList<GpsTraceElement> trace = retrieveTraceFromBinaryFile(inputFile);
 		
 		// build the KML
 		try {
@@ -173,6 +199,43 @@ public class LocationsToKml {
 			
 			// add the GPS trace
 			builder.addTrace(trace);
+			
+			// output the KML to a file
+			PrintWriter printWriter = new PrintWriter(new FileOutputStream(outputFile));
+			builder.outputToFile(printWriter);
+			
+			// close the output file
+			printWriter.close();
+			
+		} catch (BuildException e) {
+			throw new TaskException("unable to build the KML file", e);
+		} catch (FileNotFoundException e) {
+			throw new TaskException("unable to build the KML file", e);
+		}
+	}
+	
+	/*
+	 * process a binary file
+	 */
+	private void processBinaryFileTimeOutput(File inputFile, File outputFile) throws TaskException {
+		
+		if(verbose) {
+			System.out.println("processing a binary file");
+		}
+		
+		ArrayList<GpsTraceElement> trace = retrieveTraceFromBinaryFile(inputFile);
+		
+		// build the KML
+		try {
+			
+			// start a new KML file
+			KmlBuilder builder = new KmlBuilder();
+			
+			// add any style info
+			builder.setStyle(style);
+			
+			// add the GPS trace
+			builder.addTraceWithTime(trace);
 			
 			// output the KML to a file
 			PrintWriter printWriter = new PrintWriter(new FileOutputStream(outputFile));

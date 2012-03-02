@@ -27,23 +27,45 @@ public class GpsTraceElement {
 	/*
 	 * class level private variables
 	 */
-	double latitude;
-	double longitude;
-	long   timestamp;
+	private double latitude;
+	private double longitude;
+	private long   timestamp;
+	private String timezone;
+	
+	/**
+	 * construct a new GpsTraceElement object
+	 * 
+	 * @param latitude the latitude coordinate in decimal notation
+	 * @param longitude the longitude coordinate in decimal notation
+	 * @param timestamp the timestamp of when this coordinate was recorded 
+	 * @param timezone  the timezone of when this coordinate was recorded
+	 */
+	public GpsTraceElement(double latitude, double longitude, long timestamp, String timezone) {
+
+		//TODO work out better way to validate these parameters
+		this.latitude  = latitude;
+		this.longitude = longitude;
+		this.timestamp = timestamp;
+		this.timezone  = timezone;
+	}
 
 	/**
 	 * construct a new GpsTraceElement object
 	 * 
 	 * @param latitude the latitude coordinate in decimal notation
-	 * @param longitude the longitude coordinate in decimal notiation
+	 * @param longitude the longitude coordinate in decimal notation
 	 * @param timestamp the timestamp of when this coordinate was recorded 
 	 */
 	public GpsTraceElement(double latitude, double longitude, long timestamp) {
+		this(latitude, longitude, timestamp, null);
+	}
 
-		//TODO work out better way to validate these parameters
-		this.latitude = latitude;
-		this.longitude = longitude;
-		this.timestamp = timestamp;
+	public String getTimezone() {
+		return timezone;
+	}
+
+	public void setTimezone(String timezone) {
+		this.timezone = timezone;
 	}
 
 	public double getLatitude() {

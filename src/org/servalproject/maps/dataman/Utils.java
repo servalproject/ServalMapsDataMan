@@ -20,6 +20,9 @@
 package org.servalproject.maps.dataman;
 
 import java.io.File;
+import java.text.SimpleDateFormat;
+import java.util.Calendar;
+import java.util.TimeZone;
 
 /**
  * a collection of utility methods
@@ -63,6 +66,33 @@ public class Utils {
         }
 
 		return false;
+	}
+	
+	/**
+	 * build a string representing a time according to the KML specification
+	 * 
+	 * @param timestamp the time int UTC
+	 * @param timezone the local timezone of the time
+	 * @return a string representing the time according to the KML specification
+	 */
+	public static String buildTime(long time, String timeZone) {
+		
+		Calendar calendar = Calendar.getInstance(TimeZone.getTimeZone(timeZone));
+		calendar.setTimeInMillis(time);
+		
+		SimpleDateFormat formatDate = new SimpleDateFormat("yyyy-MM-dd");
+		SimpleDateFormat formatTime = new SimpleDateFormat("HH:mm:ssZZ");
+		
+		String timeAsString = formatDate.format(calendar.getTime()) + "T" + formatTime.format(calendar.getTime());
+		
+		String token = timeAsString.substring(timeAsString.length() -2, timeAsString.length());
+		
+		timeAsString = timeAsString.substring(0, timeAsString.length() -2);
+		
+		return timeAsString + ":" + token;
+		
+		//return formatDate.format(calendar.getTime()) + "T" + formatTime.format(calendar.getTime());
+		
 	}
 
 }
