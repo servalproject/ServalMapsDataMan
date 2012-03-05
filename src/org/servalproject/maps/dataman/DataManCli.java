@@ -109,6 +109,17 @@ public class DataManCli {
 			printCliHelp("Error: the output file already exists");
 		}
 		
+		// create output directory if needed 
+		if (outputPath.contains("/")) {
+			int last = outputPath.lastIndexOf("/");
+			if (last >= 0) {
+				String dir = outputPath.substring(0, last);
+				boolean success = (new File(dir)).mkdirs();
+				if (!success) {
+					System.err.println("Unable to create directory " + dir);
+				}
+			}
+		}
 		File outputFile = new File(outputPath);
 		
 		// task type
